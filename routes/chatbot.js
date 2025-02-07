@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const nodemailer = require("nodemailer");
 const { OpenAI } = require("openai");
-require("dotenv").config();
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -19,7 +18,7 @@ const transporter = nodemailer.createTransport({
 // Guardar datos temporales por usuario
 const conversations = {};
 
-router.get("/", async (req, res) => {
+router.post("/", async (req, res) => {
     const { userId, message } = req.body;
   
     if (!conversations[userId]) {
@@ -91,3 +90,8 @@ router.get("/", async (req, res) => {
 });
 
 module.exports = router;
+
+
+
+
+    
