@@ -3,7 +3,7 @@ const router = express.Router();
 const nodemailer = require("nodemailer");
 const { OpenAI } = require("openai");
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({ apiKey: "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" });
 
 const transporter = nodemailer.createTransport({
   host: "smtp.hostinger.com",
