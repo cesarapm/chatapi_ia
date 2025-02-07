@@ -6,28 +6,42 @@ const helmet = require("helmet"); // Agregar helmet
 
 const app = express();
 
-// Configurar Content Security Policy (CSP)
+// Configurar Content Security Policy (CSP) usando helmet
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "https://fonts.googleapis.com"],
-        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        defaultSrc: ["'self'"], // Permite contenido solo desde el mismo origen
+        styleSrc: ["'self'", "https://fonts.googleapis.com"], // Permite cargar estilos de Google Fonts
+        fontSrc: ["'self'", "https://fonts.gstatic.com"], // Permite cargar fuentes de Google Fonts
       },
     },
   })
 );
 
-app.use(cors());
+// Configurar CORS para permitir solicitudes desde cualquier origen
+// Para producción, deberías restringir el origen a tu dominio frontend
+app.use(
+  cors({
+    origin: "*", // Permite solicitudes de todos los orígenes (puedes cambiar "*" por tu dominio en producción)
+  })
+);
+
+// Usar body-parser para procesar las solicitudes JSON
 app.use(bodyParser.json());
 
-// Importar rutas
+// Importar las rutas para los diferentes endpoints
 const chatbotRoutes = require("./routes/chatbot");
 const otroChatRoutes = require("./routes/conectado");
 
+// Usar las rutas definidas
 app.use("/chatbot", chatbotRoutes);
 app.use("/conectado", otroChatRoutes);
 
+// Obtener el puerto desde la variable de entorno de Render
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));
+
+// Iniciar el servidor en el puerto asignado
+app.listen(PORT, () => {
+  console.log(`Servidor en http://localhost:${PORT}`);
+});
