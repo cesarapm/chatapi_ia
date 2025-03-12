@@ -33,12 +33,12 @@ app.use(bodyParser.json());
 // Importar las rutas para los diferentes endpoints
 const chatbotRoutes = require("./routes/chatbot");
 const otroChatRoutes = require("./routes/conectado");
-const RockwandChatRoutes = require("./routes/rockwand");
+// const RockwandChatRoutes = require("./routes/rockwand");
 
 // Usar las rutas definidas
 app.use("/chatbot", chatbotRoutes);
 app.use("/conectado", otroChatRoutes);
-app.use("/apirockwand", RockwandChatRoutes);
+// app.use("/apirockwand", RockwandChatRoutes);
 
 // Obtener el puerto desde la variable de entorno de Render
 const PORT = process.env.PORT || 3001;
