@@ -32,8 +32,8 @@ const knowledgeBase = {
 const conversations = {};
 
 const saludos = ["hi", "hello", "good morning", "good afternoon", "what's up", "hey"];
-const respuestasAfirmativas = ["yes", "yeah", "i do", "ok", "sure", "correct", "agreed"];
-const respuestasNegativas = ["no", "no thanks", "i don't want", "maybe later"];
+const respuestasAfirmativas = ["yes", "yeah", "i do", "ok", "sure", "correct", "agreed","si"];
+const respuestasNegativas = ["no", "no thanks", "i don't want", "maybe later"]; 
 
 
 const keywords = {
@@ -48,64 +48,74 @@ const keywords = {
   full_support: ["start to finish", "help with", "assist", "support"],
   next_step: ["what's next", "next", "get started", "send info"],
 };
-
+// 👇 Agrega esta función antes de router.post
+function containsExplicitQuestion(message) {
+  const questionWords = ["what", "how", "when", "where", "who", "which", "can", "do", "does", "is", "are"];
+  const msg = message.toLowerCase();
+  return (
+    msg.includes("?") ||
+    questionWords.some((word) => msg.startsWith(word) || msg.includes(" " + word + " "))
+  );
+}
 router.post("/", async (req, res) => {
   const { userId, message } = req.body;
   if (!userId || !message) {
-    return res.status(400).json({ reply: "Falta el userId o el mensaje." });
+    return res.status(400).json({ reply: "Missing userId or message." });
   }
 
   let userData = conversations[userId] || { etapa: "inicio" };
-  // console.log(`Mensaje recibido: ${message}`);
-  // console.log(`Estado actual del usuario:`, userData);
-  if (message=='Chat') {
-    conversations[userId] = { etapa: "inicio" };
-    return res.json({ reply: "Hello! How can I help you?" });
-  }
-
-  // Detectar saludo
-  if (saludos.some((saludo) => message.toLowerCase().includes(saludo))) {
-    conversations[userId] = { etapa: "inicio" };
-    return res.json({ reply: "Hello! How can I help you?" });
-  }
-
-  // Convertir mensaje a minúsculas
   const messageLowerCase = message.toLowerCase();
 
-  // Buscar palabras clave en el mensaje
+  if (message === "Chat") {
+    conversations[userId] = { etapa: "inicio" };
+    return res.json({ reply: "Hello! How can I help you?" });
+  }
+
+  // 👉 Primero verificamos si contiene una pregunta
   let foundAnswer = null;
   let foundCategory = null;
+  const isQuestion = containsExplicitQuestion(message);
 
-  for (const category in keywords) {
-    if (keywords[category].some((keyword) => messageLowerCase.includes(keyword))) {
-      foundCategory = category;
-      break;
+  if (isQuestion) {
+    for (const category in keywords) {
+      if (keywords[category].some((keyword) => messageLowerCase.includes(keyword))) {
+        foundCategory = category;
+        break;
+      }
     }
   }
 
-// console.log(`Categoría encontrada: ${foundCategory}`);
-
-  // Verificar si la categoría existe en knowledgeBase
-  if (foundCategory && knowledgeBase.hasOwnProperty(foundCategory)) {
-    foundAnswer = knowledgeBase[foundCategory];
-  } else {
-    // console.log(`⚠️ Error: No existe la categoría "${foundCategory}" en knowledgeBase.`);
+  // 👉 Si no se encontró por pregunta, buscar por keywords igual
+  if (!foundCategory) {
+    for (const category in keywords) {
+      if (keywords[category].some((keyword) => messageLowerCase.includes(keyword))) {
+        foundCategory = category;
+        break;
+      }
+    }
   }
 
-  // Si se encontró una respuesta, preguntar si el usuario desea contactar un asesor
+  if (foundCategory && knowledgeBase.hasOwnProperty(foundCategory)) {
+    foundAnswer = knowledgeBase[foundCategory];
+  }
+
   if (foundAnswer) {
     conversations[userId] = { etapa: "esperando_confirmacion" };
     return res.json({ reply: `${foundAnswer} Would you like an advisor to contact you?` });
   }
 
-  // Si no se encuentra una respuesta en la base de conocimientos
+  // ✅ Solo si no hay respuesta útil, responder saludo si aplica
+  if (saludos.some((saludo) => messageLowerCase.includes(saludo))) {
+    conversations[userId] = { etapa: "inicio" };
+    return res.json({ reply: "Hello! How can I help you?" });
+  }
+
+  // 👇 Aquí sigue todo el flujo como lo tenías
   if (userData.etapa === "inicio") {
-    // console.log('primro a considerar');
     conversations[userId] = { etapa: "esperando_confirmacion" };
     return res.json({ reply: "Sorry, only an advisor can give you that information. Would you like an advisor to contact you?" });
   }
 
-  // Manejo de respuestas afirmativas o negativas
   if (userData.etapa === "esperando_confirmacion") {
     if (respuestasAfirmativas.some((word) => messageLowerCase.includes(word))) {
       userData.etapa = "explicacion_datos";
@@ -118,13 +128,12 @@ router.post("/", async (req, res) => {
     }
   }
 
-  // Flujo de recolección de datos
   switch (userData.etapa) {
     case "explicacion_datos":
       userData.nombre = message;
       userData.etapa = "pedir_email";
       conversations[userId] = userData;
-      return res.json({ reply: `Nice to meet you, ${message}. What's your email address?`});
+      return res.json({ reply: `Nice to meet you, ${message}. What's your email address?` });
 
     case "pedir_email":
       if (!message.includes("@") || !message.includes(".")) {
@@ -158,11 +167,10 @@ router.post("/", async (req, res) => {
         return res.json({ reply: "Thank you! Your message has been sent. An advisor will contact you shortly." });
       } catch (error) {
         console.log(error);
-        return res.status(500).json({ reply: "Error al enviar el correo. Inténtalo más tarde." });
+        return res.status(500).json({ reply: "There was an error sending your message. Please try again later." });
       }
 
     default:
-      // Si no se encontró respuesta, preguntar a OpenAI
       const response = await openai.chat.completions.create({
         model: "gpt-4",
         messages: [{ role: "user", content: message }],
