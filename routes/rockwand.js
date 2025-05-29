@@ -90,7 +90,7 @@ router.post("/", async (req, res) => {
   if (userData.etapa === "inicio") {
     // console.log('primro a considerar');
     conversations[userId] = { etapa: "esperando_confirmacion" };
-    return res.json({ reply: "Lo siento, no tengo información sobre eso. ¿Quieres que un asesor te contacte?" });
+    return res.json({ reply: "Lo siento, esa información solo te la puede dar un asesor. ¿Quieres que un asesor te contacte?" });
   }
 
   // Manejo de respuestas afirmativas o negativas
