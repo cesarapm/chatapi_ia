@@ -158,7 +158,7 @@ router.post("/", async (req, res) => {
       try {
         await transporter.sendMail({
           from: process.env.EMAIL_USER,
-          to: "garyfeomm@gmail.com",
+          to: "Dio@4aceshomes.com",
           subject: "New message from the chatbot",
           text: `Name: ${userData.nombre}\nEmail: ${userData.email}\nPhone: ${userData.telefono}\nMessage: ${userData.mensaje}`,
         });
