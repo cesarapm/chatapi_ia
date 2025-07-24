@@ -40,6 +40,9 @@ const aces =require("./routes/aces");
 app.use("/chatbot", chatbotRoutes);
 app.use("/conectado", otroChatRoutes);
 app.use("/aces", aces);
+app.get("/", (req, res) => {
+  res.send("Hola");
+});
 // app.use("/apirockwand", RockwandChatRoutes);
 
 // Obtener el puerto desde la variable de entorno de Render
