@@ -46,6 +46,6 @@ app.use("/aces", aces);
 const PORT = process.env.PORT || 3001;
 
 // Iniciar el servidor en el puerto asignado
-app.listen(PORT, () => {
-  console.log(`Servidor en http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Servidor en http://0.0.0.0:${PORT}`);
 });
